@@ -39,7 +39,7 @@ order_details_columns, order_details_table = retrieve(f"""SELECT *FROM ORDER_HEA
   AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'""")
 pd_order = pd.DataFrame(order_details_table, columns=order_details_columns)
 for i, row in enumerate(pd_order.iterrows()):
-    dict_table = pd_order.to_dict(orient="index")
+    # dict_table = pd_order.to_dict(orient="index")
     created_user_var = pd_order.loc[i, "CREATED_USER"] #CREATED_USER_VAR
     ghx_orderid_var = pd_order.loc[i, "GHX_ORDERID"] #GHX_ORDERID_VAR
     order_status_var = pd_order.loc[i, "ORDER_STATUS"] #ORDER_STATUS_VAR
@@ -145,10 +145,10 @@ for i, row in enumerate(pd_order.iterrows()):
     veyer_ack08_msg = "IB Backorder" #VEYER_ACK08_MSG
     curr_date = datetime.now()
     segments.append(["ISA", "00", "          ", "00", "          ", "01", "600850213      ", 
-    "ZZ", str(created_user_var)[:15] if len(created_user_var) >= 15 else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))]), 
-    str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num), "0", "P", "|"])
-    segments.append(["GS", "SH", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num), "X", "004010"])
-    segments.append(["ST", "856", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])    
+    "ZZ", (str(created_user_var)[:15] if len(created_user_var) >= 15 else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))])), 
+    str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", (inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)), "0", "P", "|"])
+    segments.append(["GS", "SH", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), (str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)), "X", "004010"])
+    segments.append(["ST", "856", (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])    
     segments.append(["BSN", "00", orderid_var, str(curr_date.strftime('%Y%m%d'))] + ([str(curr_date.strftime('%H%M')), "0004"] if (vn_value_var == "71341601") else [str(curr_date.strftime('%H%M'))]) )
     segments.append(["HL", "1", "", "S"])
     segments.append(["TD1", "", (count_package_var if count_package_var != None else 1), "", "", "", "", (total_weight_package_var if total_weight_package_var != None else 10), "LB"]) if vn_value_var == "71341601" else None
@@ -172,7 +172,7 @@ for i, row in enumerate(pd_order.iterrows()):
                 segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "2I"), track_no_var[:30]])
     segments.append(["DTM", "011", str(curr_date.strftime('%Y%m%d'))])
     if vn_value_var == None or vn_value_var != "71341601":
-        segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var])
+        segments.append(["N1", "ST", ship_to_name, "91", (ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var)])
         segments.append(["N3", ship_to_address_1_var]) 
         segments.append(["N3", ship_to_address_2_var]) if ship_to_address_2_var != None else None 
         segments.append(["N4", ship_to_city_var, ship_to_st_var, ship_to_zip_var])
@@ -216,9 +216,9 @@ for i, row in enumerate(pd_order.iterrows()):
             segments.append(["SLN", ghx_line_id_var, "", "I", "", "", "", "", "", "LT", (lot_var if lot_var != None else 'UNKNOWN')])  
             segments.append(["DTM", "036", "20501230"])
     segments.append(["CTT", 2+line_counter])
-    segments.append(["SE", len(segments)-1, str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])
-    segments.append(["GE", "1", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])
-    segments.append(["IEA", "1", str(inter_con_num)[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))])  + str(inter_con_num)])
+    segments.append(["SE", len(segments)-1, (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])
+    segments.append(["GE", "1", (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])
+    segments.append(["IEA", "1", (str(inter_con_num)[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))])  + str(inter_con_num))])
 
     edi_text = ""
     for segment in segments:

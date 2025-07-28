@@ -132,10 +132,10 @@ for i, row in enumerate(pd_order.iterrows()):
         veyer_ack08_msg = "IB Backorder" #VEYER_ACK08_MSG
         curr_date = datetime.now()
         segments.append(["ISA", "00", "          ", "00", "          ", "01", "600850213      ", 
-        "ZZ", str(created_user_var)[:15] if (len(created_user_var) >= 15) else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))]), 
-        str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num), "0", "P", "|"])
+        "ZZ", (str(created_user_var)[:15] if (len(created_user_var) >= 15) else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))])), 
+        str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", (inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)), "0", "P", "|"])
         segments.append(["GS", "PR", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num), "X", "004010"])
-        segments.append(["ST", "855", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])    
+        segments.append(["ST", "855", (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])    
         segments.append(["BAK", ("00" if (vn_value_var == "VN00106821" or vn_value_var == "71341601") else "06"), ("AD" if (vn_value_var == "71341601") else "AC"), cus_po_var,  (po_date_var.strftime("%Y%m%d") if po_date_var else po_date_var), "", "", "", orderid_var, str(curr_date.strftime('%Y%m%d'))])
         segments.append(["REF", "OQ", ghx_orderid_var]) if ghx_orderid_var != None else None
         segments.append(["REF", "PO", ref_po_var]) if ref_po_var != None else None
@@ -144,7 +144,7 @@ for i, row in enumerate(pd_order.iterrows()):
             segments.append(["REF", "QC", ref_qc_var]) if ref_qc_var != None else None
             segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var])
         else:
-            segments.append(["N1", "ST"] + ([ghx_ship_to_name_var, "92"] if vn_value_var == "0000113971" else ["", "91"]) + [ghx_ship_to_num_var if ghx_ship_to_num_var != None else ship_to_num_var])
+            segments.append(["N1", "ST"] + ([ghx_ship_to_name_var, "92"] if vn_value_var == "0000113971" else ["", "91"]) + [(ghx_ship_to_num_var if ghx_ship_to_num_var != None else ship_to_num_var)])
         if vn_value_var != None and vn_value_var != "71341601" and vn_value_var != "0000113971":
             segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
             segments.append(["N3", address_1_var])
@@ -163,7 +163,7 @@ for i, row in enumerate(pd_order.iterrows()):
                 if order_detail_count == 0:
                     segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var, "", "", "", "ZZ", "I5 Product Has Been Discontinued"]) if vn_value_var == "71341601" else segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var])
             else:
-                segments.append(["PID", "F", "", "", ""] + ([order_details_product_desc_var + "-CREDIT HOLD"] if bill_overdue == "Y" else [order_details_product_desc_var]))
+                segments.append((["PID", "F", "", "", ""] + ([order_details_product_desc_var + "-CREDIT HOLD"] if bill_overdue == "Y" else [order_details_product_desc_var])))
                 if order_status_var == "OPEN" and shipping_status_var == "BACKORDER" and order_details_backorder_line == 1:
                     if vn_value_var == "71341601":
                         ghx_status_code = "IR"
@@ -231,9 +231,9 @@ for i, row in enumerate(pd_order.iterrows()):
                 else:
                     segments.append(["ACK", ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var, "", "", "", "ZZ", veyer_ack08_msg]) if vn_value_var == "71341601" else segments.append([ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var])
         segments.append(["CTT", line_items_counter])
-        segments.append(["SE", len(segments)-1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-        segments.append(["GE", 1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-        segments.append(["IEA", 1, inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)])
+        segments.append(["SE", len(segments)-1, (group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num))])
+        segments.append(["GE", 1, (group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num))])
+        segments.append(["IEA", 1, (inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num))])
         edi_text = ""
         for segment in segments:
             for field in segment:
