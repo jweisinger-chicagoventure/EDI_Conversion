@@ -39,7 +39,7 @@ order_details_columns, order_details_table = retrieve(f"""SELECT *FROM ORDER_HEA
   AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'""")
 pd_order = pd.DataFrame(order_details_table, columns=order_details_columns)
 for i, row in enumerate(pd_order.iterrows()):
-    dict_table = pd_order.to_dict(orient="index")
+    # dict_table = pd_order.to_dict(orient="index")
     created_user_var = pd_order.loc[i, "CREATED_USER"] #CREATED_USER_VAR
     ghx_orderid_var = pd_order.loc[i, "GHX_ORDERID"] #GHX_ORDERID_VAR
     order_status_var = pd_order.loc[i, "ORDER_STATUS"] #ORDER_STATUS_VAR
@@ -92,155 +92,154 @@ for i, row in enumerate(pd_order.iterrows()):
     line_counter = 0
     ghx_detail_columns, ghx_detail_table = retrieve(f"SELECT * FROM GHX_DETAILS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND LINE_ID IN (SELECT GHX_LINEID FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}') ORDER BY LINE_ID ASC")
     pd_detail = pd.DataFrame(ghx_detail_table, columns=ghx_detail_columns)
-    line_counter += 1 if not pd_detail.empty else 0 
-    ghx_line_id_var = pd_detail.loc[0, "LINE_ID"] if not pd_detail.empty else '' #GHX_LINE_ID_VAR
-    ghx_uom_var = pd_detail.loc[0, "UOM"] if not pd_detail.empty else '' #GHX_UOM_VAR
-    ghx_qty_var = pd_detail.loc[0, "QTY"] if not pd_detail.empty else '' #QTY_VAR
-    buyer_id_identifier_var = pd_detail.loc[0, "BUYER_ID_IDENTIFIER"] if not pd_detail.empty else '' #BUYER_ID_IDENTIFIER_VAR
-    buyer_id_var = pd_detail.loc[0, "BUYER_ID"] if not pd_detail.empty else '' #BUYER_ID_VAR
-    ghx_case_price_var = pd_detail.loc[0, "CASE_PRICE"] if not pd_detail.empty else '' #CASE_PRICE_VAR
-    mapped_vendor_var = pd_detail.loc[0, "MAPPED_VENDOR_ID"] if not pd_detail.empty else '' #MAPPED_VENDOR_VAR
-    vendor_id_var = pd_detail.loc[0, "VENDOR_ID"] if not pd_detail.empty else '' #VENDOR_ID
+    if pd_detail.shape[0] > 0:
+    
+        line_counter += 1 if not pd_detail.empty else 0 
+        ghx_line_id_var = pd_detail.loc[0, "LINE_ID"] if not pd_detail.empty else '' #GHX_LINE_ID_VAR
+        ghx_uom_var = pd_detail.loc[0, "UOM"] if not pd_detail.empty else '' #GHX_UOM_VAR
+        ghx_qty_var = pd_detail.loc[0, "QTY"] if not pd_detail.empty else '' #QTY_VAR
+        buyer_id_identifier_var = pd_detail.loc[0, "BUYER_ID_IDENTIFIER"] if not pd_detail.empty else '' #BUYER_ID_IDENTIFIER_VAR
+        buyer_id_var = pd_detail.loc[0, "BUYER_ID"] if not pd_detail.empty else '' #BUYER_ID_VAR
+        ghx_case_price_var = pd_detail.loc[0, "CASE_PRICE"] if not pd_detail.empty else '' #CASE_PRICE_VAR
+        mapped_vendor_var = pd_detail.loc[0, "MAPPED_VENDOR_ID"] if not pd_detail.empty else '' #MAPPED_VENDOR_VAR
+        vendor_id_var = pd_detail.loc[0, "VENDOR_ID"] if not pd_detail.empty else '' #VENDOR_ID
 
-    order_detail_columns, order_detail_table = retrieve(f"SELECT MAX(PRODUCT_ID) as PRODUCT_ID, MAX(CASE_PRICE) as CASE_PRICE, SUM(QTY) as QTY, MAX(REPLACE(PRODUCT_DESC,'|','-')) as PRODUCT_DESC, SUM(QTY) as QTY,  MAX(BACKORDER_LINE_FLAG) as BACKORDER_LINE  FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'")
-    pd_order_detail= pd.DataFrame(order_detail_table, columns=order_detail_columns)
-    order_details_case_price_var = pd_order_detail.loc[0, "CASE_PRICE"] if not pd_order_detail.empty else '' #ORDER_DETAILS_CASE_PRICE_VAR
-    order_details_line_sum_qty_var = pd_order_detail.loc[0, "QTY"].iloc[0] if not pd_order_detail.empty else ''  #ORDER_DETAILS_LINE_SUM_QTY_VAR
-    order_details_product_id_var = pd_order_detail.loc[0, "PRODUCT_ID"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_ID_VAR
-    order_details_product_desc_var = pd_order_detail.loc[0, "PRODUCT_DESC"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
-    order_details_backorder_line = pd_order_detail.loc[0, "BACKORDER_LINE"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
-    order_detail_count = retrieve(f"SELECT COUNT(*) FROM ORDER_DETAILS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND GHX_LINEID = '{ghx_line_id_var}'")[1][0][0]
-    order_detail_count2 = retrieve(f"SELECT COUNT(*) FROM PRODUCTS WHERE PRODUCT_ID = '{mapped_vendor_var}' AND VALID_FOR_SALE = '1'")[1][0][0]
-    count_var  = retrieve(f"SELECT COUNT(*) FROM GHX_HEADERS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'") #COUNT_VAR
-    count_line_var  = retrieve(f"SELECT COUNT(*) FROM ORDER_DETAILS, GHX_DETAILS WHERE ORDER_ID = '{orderid_var}' AND ORDER_DETAILS.GHX_ORDERID = '{ghx_orderid_var}' AND GHX_DETAILS.GHX_ORDERID = ORDER_DETAILS.GHX_ORDERID AND ORDER_DETAILS.GHX_LINEID = GHX_DETAILS.LINE_ID") # WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'") #COUNT_VAR
-    count_package_var  = retrieve(f"SELECT COUNT(DISTINCT TRACK_NO) FROM ORDER_TRACKS WHERE ORDER_ID = '{orderid_var}'") #COUNT_PACKAGE_VAR
-    total_weight_package_var  = retrieve(f"SELECT SUM(LINE_WEIGHT) FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'") # TOTAL_WEIGHT_PACKAGE_VAR
-    terms_columns, terms_table = retrieve(f"SELECT * FROM TERMS WHERE TERMS_STR = '{terms_var}'")
-    pd_terms = pd.DataFrame(terms_table, columns=terms_columns)
-    discount_pct_var = pd_terms.loc[0, "DISCOUNT_PCT"] if not pd_terms.empty else '' #DISCOUNT_PCT_VAR
-    discount_days_var = pd_terms.loc[0, "DISCOUNT_DAYS"] if not pd_terms.empty else '' #DISCOUNT_DAYS_VAR
-    days_var = pd_terms.loc[0, "DAYS"] if not pd_terms.empty else 0 #DAYS_VAR
-    typenex_uom_var = None
-    if order_details_product_id_var != None:
-        typenex_uom_var = retrieve(f"SELECT COUNT(*) FROM PRODUCTS WHERE PRODUCT_ID = '{order_details_product_id_var}'")
-    segment_counter = 2
-    segments = []
+        order_detail_columns, order_detail_table = retrieve(f"SELECT MAX(PRODUCT_ID) as PRODUCT_ID, MAX(CASE_PRICE) as CASE_PRICE, SUM(QTY) as QTY, MAX(REPLACE(PRODUCT_DESC,'|','-')) as PRODUCT_DESC, SUM(QTY) as QTY,  MAX(BACKORDER_LINE_FLAG) as BACKORDER_LINE  FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'")
+        pd_order_detail= pd.DataFrame(order_detail_table, columns=order_detail_columns)
+        order_details_case_price_var = pd_order_detail.loc[0, "CASE_PRICE"] if not pd_order_detail.empty else '' #ORDER_DETAILS_CASE_PRICE_VAR
+        order_details_line_sum_qty_var = pd_order_detail.loc[0, "QTY"].iloc[0] if not pd_order_detail.empty else ''  #ORDER_DETAILS_LINE_SUM_QTY_VAR
+        order_details_product_id_var = pd_order_detail.loc[0, "PRODUCT_ID"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_ID_VAR
+        order_details_product_desc_var = pd_order_detail.loc[0, "PRODUCT_DESC"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
+        order_details_backorder_line = pd_order_detail.loc[0, "BACKORDER_LINE"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
+        order_detail_count = retrieve(f"SELECT COUNT(*) FROM ORDER_DETAILS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND GHX_LINEID = '{ghx_line_id_var}'")[1][0][0]
+        order_detail_count2 = retrieve(f"SELECT COUNT(*) FROM PRODUCTS WHERE PRODUCT_ID = '{mapped_vendor_var}' AND VALID_FOR_SALE = '1'")[1][0][0]
+        count_var  = retrieve(f"SELECT COUNT(*) FROM GHX_HEADERS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'") #COUNT_VAR
+        count_line_var  = retrieve(f"SELECT COUNT(*) FROM ORDER_DETAILS, GHX_DETAILS WHERE ORDER_ID = '{orderid_var}' AND ORDER_DETAILS.GHX_ORDERID = '{ghx_orderid_var}' AND GHX_DETAILS.GHX_ORDERID = ORDER_DETAILS.GHX_ORDERID AND ORDER_DETAILS.GHX_LINEID = GHX_DETAILS.LINE_ID") # WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'") #COUNT_VAR
+        count_package_var  = retrieve(f"SELECT COUNT(DISTINCT TRACK_NO) FROM ORDER_TRACKS WHERE ORDER_ID = '{orderid_var}'") #COUNT_PACKAGE_VAR
+        total_weight_package_var  = retrieve(f"SELECT SUM(LINE_WEIGHT) FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'") # TOTAL_WEIGHT_PACKAGE_VAR
+        terms_columns, terms_table = retrieve(f"SELECT * FROM TERMS WHERE TERMS_STR = '{terms_var}'")
+        pd_terms = pd.DataFrame(terms_table, columns=terms_columns)
+        discount_pct_var = pd_terms.loc[0, "DISCOUNT_PCT"] if not pd_terms.empty else '' #DISCOUNT_PCT_VAR
+        discount_days_var = pd_terms.loc[0, "DISCOUNT_DAYS"] if not pd_terms.empty else '' #DISCOUNT_DAYS_VAR
+        days_var = pd_terms.loc[0, "DAYS"] if not pd_terms.empty else 0 #DAYS_VAR
+        typenex_uom_var = None
+        if order_details_product_id_var != None:
+            typenex_uom_var = retrieve(f"SELECT COUNT(*) FROM PRODUCTS WHERE PRODUCT_ID = '{order_details_product_id_var}'")
+        segment_counter = 2
+        segments = []
 
-
-    ghx_status_code =  "IR" #GHX_STATUS_CODE
-    veyer_ack08_msg = "IB Backorder" #VEYER_ACK08_MSG
-    curr_date = datetime.now()
-    segments.append(["ISA", "00", "          ", "00", "          ", "01", "600850213      ", 
-    "ZZ", str(created_user_var)[:15] if len(created_user_var) >= 15 else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))]), 
-    str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num), "0", "P", "|"])
-    segments.append(["GS", "PR", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num), "X", "004010"])
-    segments.append(["ST", "855", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])    
-    segments.append(["BAK", ("00" if (vn_value_var == "VN00106821" or vn_value_var == "71341601") else "06"), ("AD" if (vn_value_var == "71341601") else "AC"), cus_po_var,  (po_date_var.strftime("%Y%m%d") if po_date_var else po_date_var), "", "", "", orderid_var, str(curr_date.strftime('%Y%m%d'))])
-    segments.append(["REF", "OQ", ghx_orderid_var]) if ghx_orderid_var != None else None
-    segments.append(["REF", "PO", ref_po_var]) if ref_po_var != None else None
-    if vn_value_var == "71341601":
-        segments.append(["REF", "CO", ref_co_var]) if ref_co_var != None else None
-        segments.append(["REF", "QC", ref_qc_var]) if ref_qc_var != None else None
-        segments.append(["N1", "ST", ship_to_name, "91", ship_to_num_var])
-    else:
-        segments.append(["N1", "ST"] + ([ghx_ship_to_name_var, "92"] if vn_value_var == "0000113971" else ["", "91"]) + [ship_to_num_var + ghx_ship_to_num_var if ghx_ship_to_num_var != None else ship_to_num_var])
-    if vn_value_var != "0000113971":
-        segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
-        segments.append(["N3", address_1_var])
-        segments.append(["N4", city_var, state_var, zip_var])
-    if vn_value_var != None and vn_value_var != "71341601":
-        segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
-        if vn_value_var == "0000113971":
+        ghx_status_code =  "IR" #GHX_STATUS_CODE
+        veyer_ack08_msg = "IB Backorder" #VEYER_ACK08_MSG
+        curr_date = datetime.now()
+        segments.append(["ISA", "00", "          ", "00", "          ", "01", "600850213      ", 
+        "ZZ", str(created_user_var)[:15] if (len(created_user_var) >= 15) else str(created_user_var) + ("").join([' ' for i in range(15-len(created_user_var))]), 
+        str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num), "0", "P", "|"])
+        segments.append(["GS", "PR", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num), "X", "004010"])
+        segments.append(["ST", "855", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])    
+        segments.append(["BAK", ("00" if (vn_value_var == "VN00106821" or vn_value_var == "71341601") else "06"), ("AD" if (vn_value_var == "71341601") else "AC"), cus_po_var,  (po_date_var.strftime("%Y%m%d") if po_date_var else po_date_var), "", "", "", orderid_var, str(curr_date.strftime('%Y%m%d'))])
+        segments.append(["REF", "OQ", ghx_orderid_var]) if ghx_orderid_var != None else None
+        segments.append(["REF", "PO", ref_po_var]) if ref_po_var != None else None
+        if vn_value_var == "71341601":
+            segments.append(["REF", "CO", ref_co_var]) if ref_co_var != None else None
+            segments.append(["REF", "QC", ref_qc_var]) if ref_qc_var != None else None
+            segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var])
+        else:
+            segments.append(["N1", "ST"] + ([ghx_ship_to_name_var, "92"] if vn_value_var == "0000113971" else ["", "91"]) + [ghx_ship_to_num_var if ghx_ship_to_num_var != None else ship_to_num_var])
+        if vn_value_var != None and vn_value_var != "71341601" and vn_value_var != "0000113971":
+            segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
             segments.append(["N3", address_1_var])
             segments.append(["N4", city_var, state_var, zip_var])
-    segments.append(["N1", "SN", "", "92", sn_value_var]) if sn_value_var != None else None
-    line_items_counter = 0
-    for row in pd_detail.iterrows():
-        line_items_counter += 1
-        segments.append(["PO1", ghx_line_id_var, ghx_qty_var, ghx_uom_var, order_details_case_price_var, "", ("VA" if vn_value_var == "71341601" else "VC"), vendor_id_var, (buyer_id_identifier_var if buyer_id_identifier_var != None else "IN"), buyer_id_var])
-        if order_detail_count == 0:
-            segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var, "", "", "", "ZZ", "I5 Product Has Been Discontinued"]) if vn_value_var == "71341601" else segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var])
-        else:
-            segments.append(["PID", "F", "", "", ""] + ([order_details_product_desc_var + "-CREDIT HOLD"] if bill_overdue == "Y" else [order_details_product_desc_var]))
-            if order_status_var == "OPEN" and shipping_status_var == "BACKORDER" and order_details_backorder_line == 1:
-                if vn_value_var == "71341601":
-                    ghx_status_code = "IR"
-                    veyer_ack08_msg = "IB Backorder"
-                else:
-                    ghx_status_code = "IB"
+        if vn_value_var != None and vn_value_var != "71341601":
+            segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
+            if vn_value_var != "0000113971":
+                segments.append(["N3", address_1_var])
+                segments.append(["N4", city_var, state_var, zip_var])
+        segments.append(["N1", "SN", "", "92", sn_value_var]) if sn_value_var != None else None
+        line_items_counter = 0
+        for row in pd_detail.iterrows():
+            line_items_counter += 1
+            segments.append(["PO1", ghx_line_id_var, ghx_qty_var, ghx_uom_var, order_details_case_price_var, "", ("VA" if vn_value_var == "71341601" else "VC"), vendor_id_var] + ([(buyer_id_identifier_var if buyer_id_identifier_var != None else "IN"), buyer_id_var] if (buyer_id_var != None) else []))
+            if order_detail_count <= 0:
+                if order_detail_count == 0:
+                    segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var, "", "", "", "ZZ", "I5 Product Has Been Discontinued"]) if vn_value_var == "71341601" else segments.append(["ACK", "IR", ghx_qty_var, ghx_uom_var])
             else:
-                if bill_overdue == "Y" or order_status_var == "OPEN" and shipping_status_var == "BACKORDER":
-                    if vn_value_var == "VN00106821":
-                        ghx_status_code = "IB"
-                    elif vn_value_var == "71341601":
+                segments.append(["PID", "F", "", "", ""] + ([order_details_product_desc_var + "-CREDIT HOLD"] if bill_overdue == "Y" else [order_details_product_desc_var]))
+                if order_status_var == "OPEN" and shipping_status_var == "BACKORDER" and order_details_backorder_line == 1:
+                    if vn_value_var == "71341601":
                         ghx_status_code = "IR"
                         veyer_ack08_msg = "IB Backorder"
                     else:
-                        ghx_status_code = "IH"
+                        ghx_status_code = "IB"
                 else:
-                    ghx_status_code = "IA"
-                    if order_status_var == "OPEN" and shipping_status_var == "COMMITTED":
-                        if vn_value_var == "VN00106821" or vn_value_var == "71341601":
-                            ghx_status_code = "IA"
-                            veyer_ack08_msg = ""
-                        else:
-                            ghx_status_code = "AR"
-                    if order_status_var == "COMPLETE" and shipping_status_var == "SHIPPED":
-                        if vn_value_var == "VN00106832" or vn_value_var == "71341601":
-                            ghx_status_code = "IA"
-                            veyer_ack08_msg = ""
-                        else:
-                            ghx_status_code = "AC"
-                    if ghx_uom_var != typenex_uom_var:
-                        if vn_value_var == "VN00106832" or vn_value_var == "71341601":
-                            ghx_status_code = "IA"
-                            veyer_ack08_msg = ""
-                        else:
-                            ghx_status_code = "IC"
-                    if ghx_case_price_var != order_details_case_price_var:
-                        ghx_status_code = "IP"
-                        if vn_value_var == "71341601":
-                            ghx_status_code = "IA"
-                            veyer_ack08_msg = ""
-                        if vn_value_var == None or vn_value_var != "VN00106821" or vn_value_var != "71341601":
-                            if ghx_uom_var != typenex_uom_var:
-                                ghx_status_code = "IC"
-                    if vendor_id_var != order_details_product_id_var:
-                        if vn_value_var == "71341601":
+                    if bill_overdue == "Y" or order_status_var == "OPEN" and shipping_status_var == "BACKORDER":
+                        if vn_value_var == "VN00106821":
+                            ghx_status_code = "IB"
+                        elif vn_value_var == "71341601":
                             ghx_status_code = "IR"
-                            veyer_ack08_msg = "I4 Bad SKU"
+                            veyer_ack08_msg = "IB Backorder"
                         else:
-                            ghx_status_code = "IS"
-                    if ghx_qty_var != order_details_line_sum_qty_var:
-                        if split_order_id_var != None:
-                            ghx_status_code = "BP"
-                        else:
-                            ghx_status_code = "IQ"
-            if (ghx_status_code != "IB" and ghx_status_code != "IH") and (vn_value_var != "71341601" or vn_value_var == None) or (ghx_status_code == "IH" or ghx_status_code == "IB") and vn_value_var == "0000113971" or veyer_ack08_msg == None and vn_value_var == "71341601":
-                current_segment = ["ACK"] + [ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var] + (["067"] if vn_value_var == "VN00106821" else []) +  (["068"] if vn_value_var == "0000113971" else []) +  (["083"] if vn_value_var == "71341601" else []) +  (["017"] if (vn_value_var != "VN00106821" and vn_value_var != "0000113971" and vn_value_var != "71341601") else [])
-                if (ghx_status_code == "IH" or ghx_status_code == "IB") and vn_value_var == "0000113971":
-                    current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(20)).strftime('%Y%m%d') ]
-                else:
-                    if rush_order_var == "RO":
-                        current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(1)).strftime('%Y%m%d') ]  if shipping_type_var == "NEXT_DAY" else  [(shipped_date_var + pd.tseries.offsets.BusinessDay(2)).strftime('%Y%m%d') ] 
+                            ghx_status_code = "IH"
                     else:
-                        current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(4)).strftime('%Y%m%d') ]
-                segments.append(current_segment + (["", "", ""] if vn_value_var == "71341601" else [order_details_product_id_var]))
-            else:
-                segments.append(["ACK", ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var, "", "", "", "ZZ", veyer_ack08_msg]) if vn_value_var == "71341601" else segments.append([ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var])
-    segments.append(["CTT", line_items_counter])
-    segments.append(["SE", len(segments)-1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-    segments.append(["GE", 1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-    segments.append(["IEA", 1, inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)])
-    edi_text = ""
-    for segment in segments:
-        for field in segment:
-            edi_text += str(field) + "^"
-        edi_text = edi_text[:-1]
-        edi_text += "~"
+                        ghx_status_code = "IA"
+                        if order_status_var == "OPEN" and shipping_status_var == "COMMITTED":
+                            if vn_value_var == "VN00106821" or vn_value_var == "71341601":
+                                ghx_status_code = "IA"
+                                veyer_ack08_msg = ""
+                            else:
+                                ghx_status_code = "AR"
+                        if order_status_var == "COMPLETE" and shipping_status_var == "SHIPPED":
+                            if vn_value_var == "VN00106821" or vn_value_var == "71341601":
+                                ghx_status_code = "IA"
+                                veyer_ack08_msg = ""
+                            else:
+                                ghx_status_code = "AC"
+                        if ghx_uom_var != typenex_uom_var:
+                            if vn_value_var == "VN00106821" or vn_value_var == "71341601":
+                                ghx_status_code = "IA"
+                                veyer_ack08_msg = ""
+                            else:
+                                ghx_status_code = "IC"
+                        if ghx_case_price_var != order_details_case_price_var:
+                            ghx_status_code = "IP"
+                            if vn_value_var == "71341601":
+                                ghx_status_code = "IA"
+                                veyer_ack08_msg = ""
+                            if vn_value_var == None or vn_value_var != "VN00106821" or vn_value_var != "71341601":
+                                if ghx_uom_var != typenex_uom_var:
+                                    ghx_status_code = "IC"
+                        if vendor_id_var != order_details_product_id_var:
+                            if vn_value_var == "71341601":
+                                ghx_status_code = "IR"
+                                veyer_ack08_msg = "I4 Bad SKU"
+                            else:
+                                ghx_status_code = "IS"
+                        if ghx_qty_var != order_details_line_sum_qty_var:
+                            if split_order_id_var != None:
+                                ghx_status_code = "BP"
+                            else:
+                                ghx_status_code = "IQ"
+                if (ghx_status_code != "IB" and ghx_status_code != "IH") and (vn_value_var != "71341601" or vn_value_var == None) or (ghx_status_code == "IH" or ghx_status_code == "IB") and vn_value_var == "0000113971" or veyer_ack08_msg == None and vn_value_var == "71341601":
+                    current_segment = ["ACK"] + [ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var] + (["067"] if vn_value_var == "VN00106821" else []) +  (["068"] if vn_value_var == "0000113971" else []) +  (["083"] if vn_value_var == "71341601" else []) +  (["017"] if (vn_value_var != "VN00106821" and vn_value_var != "0000113971" and vn_value_var != "71341601") else [])
+                    if (ghx_status_code == "IH" or ghx_status_code == "IB") and vn_value_var == "0000113971":
+                        current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(20)).strftime('%Y%m%d') ]
+                    else:
+                        if rush_order_var == "RO":
+                            current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(1)).strftime('%Y%m%d') ]  if shipping_type_var == "NEXT_DAY" else  [(shipped_date_var + pd.tseries.offsets.BusinessDay(2)).strftime('%Y%m%d') ] 
+                        else:
+                            current_segment += [(shipped_date_var + pd.tseries.offsets.BusinessDay(4)).strftime('%Y%m%d') ]
+                    segments.append(current_segment + (["", "", ""] if vn_value_var == "71341601" else ["", "VC", order_details_product_id_var]))
+                else:
+                    segments.append(["ACK", ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var, "", "", "", "ZZ", veyer_ack08_msg]) if vn_value_var == "71341601" else segments.append([ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var])
+        segments.append(["CTT", line_items_counter])
+        segments.append(["SE", len(segments)-1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
+        segments.append(["GE", 1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
+        segments.append(["IEA", 1, inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)])
+        edi_text = ""
+        for segment in segments:
+            for field in segment:
+                edi_text += str(field) + "^"
+            edi_text = edi_text[:-1]
+            edi_text += "~"
 
-    with open(f"./855_Test_Files/{orderid_var}.txt", "w") as f:
-        f.write(edi_text)
-    print(edi_text)
-    print("next")
-print("done")
+        with open(f"./855_Test_Files/{orderid_var}.txt", "w") as f:
+            f.write(edi_text)
