@@ -44,25 +44,25 @@ for i, row in enumerate(pd_order.iterrows()):
     shipping_status_var = pd_order.loc[0, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
     orderid_var = pd_order.loc[0, "ORDER_ID"] #ORDERID_VAR
     order_total_var = pd_order.loc[0, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
-    ship_to_address_1_var = pd_order.loc[0, "SHIP_TO_ADDRESS_1"] #SHIP_TO_ADDRESS_1_VAR
-    ship_to_address_2_var = pd_order.loc[0, "SHIP_TO_ADDRESS_2"] #SHIP_TO_ADDRESS_2_VAR
+    ship_to_address_1_var = pd_order.loc[0, "SHIP_TO_ADDRESS_1"].iloc[0] #SHIP_TO_ADDRESS_1_VAR
+    ship_to_address_2_var = pd_order.loc[0, "SHIP_TO_ADDRESS_2"].iloc[0] #SHIP_TO_ADDRESS_2_VAR
     shipped_date_var = pd_order.loc[0, "SHIPPED_DATE"] #SHIPPED_DATE_VAR
-    ship_to_num_var = pd_order.loc[0, "SHIP_TO_#"][0] #SHIP_TO_#_VAR
+    ship_to_num_var = pd_order.loc[0, "SHIP_TO_#"].iloc[0] #SHIP_TO_#_VAR
     cus_po_var = pd_order.loc[0, "CUS_PO"] #CUS_PO_VAR
-    ship_to_name = pd_order.loc[0, 'SHIP_TO_NAME'][0]
+    ship_to_name = pd_order.loc[0, 'SHIP_TO_NAME'].iloc[0]
     order_value = pd_order.loc[0, 'ORDER_ID']
     bill_overdue = pd_order.loc[0, 'BILL_OVER_DUE'] if type(pd_order.loc[0, 'BILL_OVER_DUE']) == str else pd_order.loc[0, 'BILL_OVER_DUE'].iloc[0] #BILL_OVER_DUE_VAR
     shipping_type_var = pd_order.loc[0, 'SHIPPING_TYPE'] #SHIPPING_TYPE_VAR
     shipping_carrier_var = pd_order.loc[0, 'SHIPPING_CARRIER'] #SHIPPING_CARRIER_VAR
     split_order_id_var = pd_order.loc[0, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
-    bill_to_city_var = pd_order.loc[0, 'BILL_TO_CITY'][0] #BILL_TO_CITY_VAR
-    bill_to_st_var = pd_order.loc[0, 'BILL_TO_ST'][0] #BILL_TO_STATE_VAR
-    bill_to_zip_var = pd_order.loc[0, 'BILL_TO_ZIP'][0] #BILL_TO_ZIP_VAR
-    ship_to_city_var = pd_order.loc[0, 'SHIP_TO_CITY'] #SHIP_TO_CITY_VAR
-    ship_to_st_var = pd_order.loc[0, 'SHIP_TO_ST'] #SHIP_TO_STATE_VAR
-    ship_to_zip_var = pd_order.loc[0, 'SHIP_TO_ZIP'] #SHIP_TO_ZIP_VAR
-    bill_to_name_var = pd_order.loc[0, 'BILL_TO_NAME'][0] #BILL_TO_NAME_VAR
-    bill_to_num_var = pd_order.loc[0, 'BILL_TO_#'][0] #BILL_TO_NUM_VAR
+    bill_to_city_var = pd_order.loc[0, 'BILL_TO_CITY'].iloc[0] #BILL_TO_CITY_VAR
+    bill_to_st_var = pd_order.loc[0, 'BILL_TO_ST'].iloc[0] #BILL_TO_STATE_VAR
+    bill_to_zip_var = pd_order.loc[0, 'BILL_TO_ZIP'].iloc[0] #BILL_TO_ZIP_VAR
+    ship_to_city_var = pd_order.loc[0, 'SHIP_TO_CITY'].iloc[0] #SHIP_TO_CITY_VAR
+    ship_to_st_var = pd_order.loc[0, 'SHIP_TO_ST'].iloc[0] #SHIP_TO_STATE_VAR
+    ship_to_zip_var = pd_order.loc[0, 'SHIP_TO_ZIP'].iloc[0] #SHIP_TO_ZIP_VAR
+    bill_to_name_var = pd_order.loc[0, 'BILL_TO_NAME'].iloc[0] #BILL_TO_NAME_VAR
+    bill_to_num_var = pd_order.loc[0, 'BILL_TO_#'].iloc[0] #BILL_TO_NUM_VAR
     ship_total_var = pd_order.loc[0, 'SHIP_TOTAL'] #SHIP_TOTAL_VAR
     mini_order_surcharge_var = pd_order.loc[0, 'MINI_ORDER_SURCHAGE'] #MINI_ORDER_SURCHARGE_VAR
     saturday_surcharge_var = pd_order.loc[0, 'SATURDAY_SURCHAGE'] #SATURDAY_SURCHARGE_VAR
@@ -81,9 +81,6 @@ for i, row in enumerate(pd_order.iterrows()):
     vn_value_var = pd_ghx.loc[0, "VN_VALUE"] if not pd_ghx.empty else '' #VN_VALUE_VAR
     sn_value_var = pd_ghx.loc[0, "SN_VALUE"] if not pd_ghx.empty else '' #SN_VALUE_VAR
     rush_order_var = pd_ghx.loc[0, 'RUSH_ORDER'] if not pd_ghx.empty else '' #SPLIT_ORDER_ID_VAR
-    print("HERE")
-    print(pd_ghx)
-    print(ghx_header_columns)
 
     ref_po_var = pd_ghx.loc[0, "REF_PO"] if not pd_ghx.empty else ''
     ref_co_var = pd_ghx.loc[0, "REF_CO"] if not pd_ghx.empty else ''
@@ -106,14 +103,13 @@ for i, row in enumerate(pd_order.iterrows()):
 
     scac_columns, scac_table = retrieve(f"SELECT MIN(CODE) as SCAC, MIN(FISHER_CODE) as FISHER_SCAC FROM GHX_SCAC WHERE SHIP_TYPE = '{shipping_type_var}' AND FULL_DESC LIKE '{shipping_carrier_var}%' AND VALID = 'Y'")
     pd_ghx_scac = pd.DataFrame(scac_table, columns=scac_columns)
-    print(pd_ghx_scac)
     scac_var = pd_ghx_scac.loc[0, "SCAC"] if not pd_ghx_scac.empty else ''
     fisher_scac_var = pd_ghx_scac.loc[0, "FISHER_SCAC"] if not pd_ghx_scac.empty else ''
     scac_var =  retrieve(f"SELECT SCAC_CODE FROM ORDER_HEADERS WHERE ORDER_ID = '{orderid_var}'")[1][0][0] if scac_var == None else scac_var 
     scac_var = 'UNKN' if scac_var == None else scac_var
     fisher_scac_var = 'UNKN' if fisher_scac_var == None else fisher_scac_var
     track_columns, track_table = retrieve(f"SELECT DISTINCT TRACK_NO FROM ORDER_TRACKS WHERE ORDER_ID = '{orderid_var}' ORDER BY TRACK_NO")
-    pd_track = pd.DataFrame(scac_table, columns=scac_columns)
+    pd_track = pd.DataFrame(track_table, columns=track_columns)
     track_no_var = pd_track.loc[0, "TRACK_NO"] #TRACK_NO_VAR
 
     order_detail_columns, order_detail_table = retrieve(f"SELECT MAX(PRODUCT_ID) as PRODUCT_ID, MAX(CASE_PRICE) as CASE_PRICE, SUM(QTY) as QTY, MAX(REPLACE(PRODUCT_DESC,'|','-')) as PRODUCT_DESC, SUM(QTY) as QTY,  MAX(BACKORDER_LINE_FLAG) as BACKORDER_LINE  FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'")
@@ -130,6 +126,8 @@ for i, row in enumerate(pd_order.iterrows()):
     count_package_var  = retrieve(f"SELECT COUNT(DISTINCT TRACK_NO) FROM ORDER_TRACKS WHERE ORDER_ID = '{orderid_var}'") #COUNT_PACKAGE_VAR
     total_weight_package_var  = retrieve(f"SELECT SUM(LINE_WEIGHT) FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'") # TOTAL_WEIGHT_PACKAGE_VAR
     terms_columns, terms_table = retrieve(f"SELECT * FROM TERMS WHERE TERMS_STR = '{terms_var}'")
+    lot_var = retrieve(f"SELECT MIN(LOT) FROM ORDER_LOTS WHERE ORDER_ID = '{orderid_var}' AND PRODUCT_ID = '{order_details_product_id_var}'")[1][0][0]
+
     pd_terms = pd.DataFrame(terms_table, columns=terms_columns)
     discount_pct_var = pd_terms.loc[0, "DISCOUNT_PCT"] if not pd_terms.empty else '' #DISCOUNT_PCT_VAR
     discount_days_var = pd_terms.loc[0, "DISCOUNT_DAYS"] if not pd_terms.empty else '' #DISCOUNT_DAYS_VAR
@@ -161,15 +159,64 @@ for i, row in enumerate(pd_order.iterrows()):
             curr_segment += ["M"]
         elif shipping_carrier_var == "UPS" or shipping_carrier_var == "FEDEX":
             curr_segment += ["U"]
-        segments.append(curr_segment + shipping_carrier_var)
+        segments.append(curr_segment + [shipping_carrier_var])
     if vn_value_var == "71341601":
         segments.append(["REF", "CN", ref_qc_var])
         for row in pd_detail.iterrows():
-            segments.append("REF", "BM", track_no_var[:30])
+            segments.append(["REF", "BM", track_no_var[:30]])
     else:
         for row in pd_detail.iterrows():
-            segments.append("REF", ("CN" if vn_value_var == "VN00106821" else "21"), track_no_var[:30])
-    segments.append(["DTM", "011", ])
+            segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "21"), track_no_var[:30]])
+    segments.append(["DTM", "011", str(curr_date.strftime('%Y%m%d'))])
+    if vn_value_var == None or vn_value_var != "71341601":
+        segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var])
+        segments.append(["N3", ship_to_address_1_var]) 
+        segments.append(["N3", ship_to_address_2_var]) if ship_to_address_2_var != None else None 
+        segments.append(["N4", ship_to_city_var, ship_to_st_var, ship_to_zip_var])
+    elif vn_value_var == "71341601":
+        segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var])
+    if vn_value_var != None:
+        segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
+        segments.append(["N3", address_1_var])
+        segments.append(["N4", city_var, state_var, zip_var])
+    if vn_value_var != None and vn_value_var != "71341601":
+        segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
+        segments.append(["N3", address_1_var])
+        segments.appendd(["N4", city_var, state_var, zip_var])
+    segments.append(["HL", "2", "1", "O"])
+    segments.append(["PRF", cus_po_var])
+    if ghx_orderid_var != None:
+        segments.append(["REF", "OQ", ghx_orderid_var])
+        if ref_po_var != None:
+            segments.append(["REF", "PO", ref_po_var])
+
+    for row in pd_detail.iterrows():
+        print("MY ROW")
+        curr_segment = []
+        if order_details_line_sum_qty_var > 0:
+            line_counter += 1
+            segments.append(["HL", 2+line_counter, "2", "I"])
+            curr_segment += ["LIN", ghx_line_id_var]
+        if vn_value_var == "71341601":
+            curr_segment += ["VA", vendor_id_var]
+        if buyer_id_var != None:
+            if vn_value_var == "71341601":
+                segments.append(curr_segment + [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]) 
+                curr_segment = []
+            else:
+                curr_segment += [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]
+        if vn_value_var == None or vn_value_var != "71341601":
+            segments.append(curr_segment + ["VC", order_details_product_id_var])
+            curr_segment = []
+        curr_segment += ["SN1", "", order_details_line_sum_qty_var]
+        segments.append(curr_segment + [(ghx_uom_var if ghx_uom_var != None else (typenex_uom_var if typenex_uom_var else "CA"))] )
+        if vn_value_var == "VN00106821":
+            segments.append(["SLN", ghx_line_id_var, "", "I", "", "", "", "", "", "LT", (lot_var if lot_var != None else 'UNKNOWN')])  
+            segments.append(["DTM", "036", "20501230"])
+    segments.append(["CTT", 2+line_counter])
+    segments.append(["SE", len(segments)-1, str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])
+    segments.append(["GE", "1", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])
+    segments.append(["IEA", "1", str(inter_con_num)[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))])  + str(inter_con_num)])
 
     edi_text = ""
     for segment in segments:
@@ -180,3 +227,8 @@ for i, row in enumerate(pd_order.iterrows()):
     print(edi_text)
     print("next")
 print("done")
+
+# print("OK")
+# print(ship_to_city_var)
+# print(ship_to_st_var)
+# print(ship_to_zip_var)
