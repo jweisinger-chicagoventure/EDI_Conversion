@@ -2,7 +2,9 @@
 import oracledb
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
+os.makedirs("./855_Test_Files", exist_ok=True)
 #Retrieving password from secure file
 password_txt = ''
 with open('password.txt', 'r') as f:
@@ -34,41 +36,41 @@ group_con_num = retrieve("SELECT GHX_GROUP_CON_NUM.NEXTVAL FROM DUAL")[1][0][0] 
 order_details_columns, order_details_table = retrieve(f"""SELECT *FROM ORDER_HEADERS, FULL_CONTRACT WHERE (CREATED_USER ='GHXTEST' OR CREATED_USER ='GHX')
   AND ORDER_DATE IS NOT NULL AND FULFILLED_DATE IS NOT NULL AND SHIPPED_DATE IS NOT NULL AND (FULL_CONTRACT.GHX_INVOICE ='Y' OR ORDER_ID ='24024699') AND (INVOICE_DATE IS NULL)
   AND (FULL_CONTRACT.BILL_COUNTRY='USA' OR FULL_CONTRACT.BILL_COUNTRY='CANADA') AND FULL_CONTRACT.BILL_TO_# = ORDER_HEADERS.BILL_TO_# AND FULL_CONTRACT.SHIP_TO_# = ORDER_HEADERS.SHIP_TO_# AND (ORDER_HEADERS.GHX_810_DATE IS NULL)
-  AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'FETCH FIRST ROW ONLY""")
+  AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'""")
 pd_order = pd.DataFrame(order_details_table, columns=order_details_columns)
 for i, row in enumerate(pd_order.iterrows()):
     dict_table = pd_order.to_dict(orient="index")
-    created_user_var = pd_order.loc[0, "CREATED_USER"] #CREATED_USER_VAR
-    ghx_orderid_var = pd_order.loc[0, "GHX_ORDERID"] #GHX_ORDERID_VAR
-    order_status_var = pd_order.loc[0, "ORDER_STATUS"] #ORDER_STATUS_VAR
-    shipping_status_var = pd_order.loc[0, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
-    orderid_var = pd_order.loc[0, "ORDER_ID"] #ORDERID_VAR
-    order_total_var = pd_order.loc[0, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
-    ship_to_address_1_var = pd_order.loc[0, "SHIP_TO_ADDRESS_1"] #SHIP_TO_ADDRESS_1_VAR
-    ship_to_address_2_var = pd_order.loc[0, "SHIP_TO_ADDRESS_2"] #SHIP_TO_ADDRESS_2_VAR
-    shipped_date_var = pd_order.loc[0, "SHIPPED_DATE"] #SHIPPED_DATE_VAR
-    ship_to_num_var = pd_order.loc[0, "SHIP_TO_#"][0] #SHIP_TO_#_VAR
-    cus_po_var = pd_order.loc[0, "CUS_PO"] #CUS_PO_VAR
-    ship_to_name = pd_order.loc[0, 'SHIP_TO_NAME'][0]
-    order_value = pd_order.loc[0, 'ORDER_ID']
-    bill_overdue = pd_order.loc[0, 'BILL_OVER_DUE'] if type(pd_order.loc[0, 'BILL_OVER_DUE']) == str else pd_order.loc[0, 'BILL_OVER_DUE'].iloc[0] #BILL_OVER_DUE_VAR
-    shipping_type_var = pd_order.loc[0, 'SHIPPING_TYPE'] #SHIPPING_TYPE_VAR
-    shipping_carrier_var = pd_order.loc[0, 'SHIPPING_CARRIER'] #SHIPPING_CARRIER_VAR
-    split_order_id_var = pd_order.loc[0, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
-    bill_to_city_var = pd_order.loc[0, 'BILL_TO_CITY'][0] #BILL_TO_CITY_VAR
-    bill_to_st_var = pd_order.loc[0, 'BILL_TO_ST'][0] #BILL_TO_STATE_VAR
-    bill_to_zip_var = pd_order.loc[0, 'BILL_TO_ZIP'][0] #BILL_TO_ZIP_VAR
-    ship_to_city_var = pd_order.loc[0, 'SHIP_TO_CITY'] #SHIP_TO_CITY_VAR
-    ship_to_st_var = pd_order.loc[0, 'SHIP_TO_ST'] #SHIP_TO_STATE_VAR
-    ship_to_zip_var = pd_order.loc[0, 'SHIP_TO_ZIP'] #SHIP_TO_ZIP_VAR
-    bill_to_name_var = pd_order.loc[0, 'BILL_TO_NAME'][0] #BILL_TO_NAME_VAR
-    bill_to_num_var = pd_order.loc[0, 'BILL_TO_#'][0] #BILL_TO_NUM_VAR
-    ship_total_var = pd_order.loc[0, 'SHIP_TOTAL'] #SHIP_TOTAL_VAR
-    mini_order_surcharge_var = pd_order.loc[0, 'MINI_ORDER_SURCHAGE'] #MINI_ORDER_SURCHARGE_VAR
-    saturday_surcharge_var = pd_order.loc[0, 'SATURDAY_SURCHAGE'] #SATURDAY_SURCHARGE_VAR
-    drop_ship_surcharge_var = pd_order.loc[0, 'DROP_SHIP_SURCHARGE'] #DROPSHIP_SURCHARGE_VAR
-    sales_tax_var = pd_order.loc[0, 'SALES_TAX'] #SALES_TAX_VAR
-    terms_var = pd_order.loc[0, 'TERMS'] #TERMS_VAR
+    created_user_var = pd_order.loc[i, "CREATED_USER"] #CREATED_USER_VAR
+    ghx_orderid_var = pd_order.loc[i, "GHX_ORDERID"] #GHX_ORDERID_VAR
+    order_status_var = pd_order.loc[i, "ORDER_STATUS"] #ORDER_STATUS_VAR
+    shipping_status_var = pd_order.loc[i, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
+    orderid_var = pd_order.loc[i, "ORDER_ID"] #ORDERID_VAR
+    order_total_var = pd_order.loc[i, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
+    ship_to_address_1_var = pd_order.loc[i, "SHIP_TO_ADDRESS_1"] #SHIP_TO_ADDRESS_1_VAR
+    ship_to_address_2_var = pd_order.loc[i, "SHIP_TO_ADDRESS_2"] #SHIP_TO_ADDRESS_2_VAR
+    shipped_date_var = pd_order.loc[i, "SHIPPED_DATE"] #SHIPPED_DATE_VAR
+    ship_to_num_var = pd_order.loc[i, "SHIP_TO_#"].iloc[0] #SHIP_TO_#_VAR
+    cus_po_var = pd_order.loc[i, "CUS_PO"] #CUS_PO_VAR
+    ship_to_name = pd_order.loc[i, 'SHIP_TO_NAME'].iloc[0]
+    order_value = pd_order.loc[i, 'ORDER_ID']
+    bill_overdue = pd_order.loc[i, 'BILL_OVER_DUE'] if type(pd_order.loc[0, 'BILL_OVER_DUE']) == str else pd_order.loc[0, 'BILL_OVER_DUE'].iloc[0] #BILL_OVER_DUE_VAR
+    shipping_type_var = pd_order.loc[i, 'SHIPPING_TYPE'] #SHIPPING_TYPE_VAR
+    shipping_carrier_var = pd_order.loc[i, 'SHIPPING_CARRIER'] #SHIPPING_CARRIER_VAR
+    split_order_id_var = pd_order.loc[i, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
+    bill_to_city_var = pd_order.loc[i, 'BILL_TO_CITY'].iloc[0] #BILL_TO_CITY_VAR
+    bill_to_st_var = pd_order.loc[i, 'BILL_TO_ST'].iloc[0] #BILL_TO_STATE_VAR
+    bill_to_zip_var = pd_order.loc[i, 'BILL_TO_ZIP'].iloc[0] #BILL_TO_ZIP_VAR
+    ship_to_city_var = pd_order.loc[i, 'SHIP_TO_CITY'] #SHIP_TO_CITY_VAR
+    ship_to_st_var = pd_order.loc[i, 'SHIP_TO_ST'] #SHIP_TO_STATE_VAR
+    ship_to_zip_var = pd_order.loc[i, 'SHIP_TO_ZIP'] #SHIP_TO_ZIP_VAR
+    bill_to_name_var = pd_order.loc[i, 'BILL_TO_NAME'].iloc[0] #BILL_TO_NAME_VAR
+    bill_to_num_var = pd_order.loc[i, 'BILL_TO_#'].iloc[0] #BILL_TO_NUM_VAR
+    ship_total_var = pd_order.loc[i, 'SHIP_TOTAL'] #SHIP_TOTAL_VAR
+    mini_order_surcharge_var = pd_order.loc[i, 'MINI_ORDER_SURCHAGE'] #MINI_ORDER_SURCHARGE_VAR
+    saturday_surcharge_var = pd_order.loc[i, 'SATURDAY_SURCHAGE'] #SATURDAY_SURCHARGE_VAR
+    drop_ship_surcharge_var = pd_order.loc[i, 'DROP_SHIP_SURCHARGE'] #DROPSHIP_SURCHARGE_VAR
+    sales_tax_var = pd_order.loc[i, 'SALES_TAX'] #SALES_TAX_VAR
+    terms_var = pd_order.loc[i, 'TERMS'] #TERMS_VAR
 
     split_order_id_var = pd_order.loc[0, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
 
@@ -81,9 +83,7 @@ for i, row in enumerate(pd_order.iterrows()):
     vn_value_var = pd_ghx.loc[0, "VN_VALUE"] if not pd_ghx.empty else '' #VN_VALUE_VAR
     sn_value_var = pd_ghx.loc[0, "SN_VALUE"] if not pd_ghx.empty else '' #SN_VALUE_VAR
     rush_order_var = pd_ghx.loc[0, 'RUSH_ORDER'] if not pd_ghx.empty else '' #SPLIT_ORDER_ID_VAR
-    print("HERE")
-    print(pd_ghx)
-    print(ghx_header_columns)
+
 
     ref_po_var = pd_ghx.loc[0, "REF_PO"] if not pd_ghx.empty else ''
     ref_co_var = pd_ghx.loc[0, "REF_CO"] if not pd_ghx.empty else ''
@@ -228,16 +228,19 @@ for i, row in enumerate(pd_order.iterrows()):
                 segments.append(current_segment + (["", "", ""] if vn_value_var == "71341601" else [order_details_product_id_var]))
             else:
                 segments.append(["ACK", ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var, "", "", "", "ZZ", veyer_ack08_msg]) if vn_value_var == "71341601" else segments.append([ghx_status_code, order_details_line_sum_qty_var, ghx_uom_var])
-            segments.append(["CTT", line_items_counter])
-            segments.append(["SE", len(segments)-1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-            segments.append(["GE", 1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
-            segments.append(["IEA", 1, inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)])
+    segments.append(["CTT", line_items_counter])
+    segments.append(["SE", len(segments)-1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
+    segments.append(["GE", 1, group_con_num[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))]) + str(group_con_num)])
+    segments.append(["IEA", 1, inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)])
     edi_text = ""
     for segment in segments:
         for field in segment:
             edi_text += str(field) + "^"
         edi_text = edi_text[:-1]
         edi_text += "~"
+
+    with open(f"./855_Test_Files/{orderid_var}.txt", "w") as f:
+        f.write(edi_text)
     print(edi_text)
     print("next")
 print("done")
