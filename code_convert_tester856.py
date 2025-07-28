@@ -45,7 +45,6 @@ for i, row in enumerate(pd_order.iterrows()):
     order_status_var = pd_order.loc[i, "ORDER_STATUS"] #ORDER_STATUS_VAR
     shipping_status_var = pd_order.loc[i, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
     orderid_var = pd_order.loc[i, "ORDER_ID"] #ORDERID_VAR
-    print(f"order id var... : {orderid_var}")
     order_total_var = pd_order.loc[i, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
     ship_to_address_1_var = pd_order.loc[i, "SHIP_TO_ADDRESS_1"].iloc[0] #SHIP_TO_ADDRESS_1_VAR
     ship_to_address_2_var = pd_order.loc[i, "SHIP_TO_ADDRESS_2"].iloc[0] #SHIP_TO_ADDRESS_2_VAR
@@ -150,7 +149,6 @@ for i, row in enumerate(pd_order.iterrows()):
     str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num), "0", "P", "|"])
     segments.append(["GS", "SH", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num), "X", "004010"])
     segments.append(["ST", "856", str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)])    
-    # segments.append(["BSN", ("00" if (vn_value_var == "VN00106821" or vn_value_var == "71341601") else "06"), ("AD" if (vn_value_var == "71341601") else "AC"), cus_po_var,  (po_date_var.strftime("%Y%m%d") if po_date_var else po_date_var), "", "", "", orderid_var, str(curr_date.strftime('%Y%m%d'))])
     segments.append(["BSN", "00", orderid_var, str(curr_date.strftime('%Y%m%d'))] + ([str(curr_date.strftime('%H%M')), "0004"] if (vn_value_var == "71341601") else [str(curr_date.strftime('%H%M'))]) )
     segments.append(["HL", "1", "", "S"])
     segments.append(["TD1", "", (count_package_var if count_package_var != None else 1), "", "", "", "", (total_weight_package_var if total_weight_package_var != None else 10), "LB"]) if vn_value_var == "71341601" else None
@@ -231,9 +229,3 @@ for i, row in enumerate(pd_order.iterrows()):
 
     with open(f"./856_Test_Files/{orderid_var}.txt", "w") as f:
         f.write(edi_text)
-    print(edi_text)
-    print("next")
-    print("CARRIER")
-    print(shipping_carrier_var)
-print("done")
-
