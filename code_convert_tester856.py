@@ -2,7 +2,9 @@
 import oracledb
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
+os.makedirs("./856_Test_Files", exist_ok=True)
 #Retrieving password from secure file
 password_txt = ''
 with open('password.txt', 'r') as f:
@@ -34,43 +36,44 @@ group_con_num = retrieve("SELECT GHX_GROUP_CON_NUM.NEXTVAL FROM DUAL")[1][0][0] 
 order_details_columns, order_details_table = retrieve(f"""SELECT *FROM ORDER_HEADERS, FULL_CONTRACT WHERE (CREATED_USER ='GHXTEST' OR CREATED_USER ='GHX')
   AND ORDER_DATE IS NOT NULL AND FULFILLED_DATE IS NOT NULL AND SHIPPED_DATE IS NOT NULL AND (FULL_CONTRACT.GHX_INVOICE ='Y' OR ORDER_ID ='24024699') AND (INVOICE_DATE IS NULL)
   AND (FULL_CONTRACT.BILL_COUNTRY='USA' OR FULL_CONTRACT.BILL_COUNTRY='CANADA') AND FULL_CONTRACT.BILL_TO_# = ORDER_HEADERS.BILL_TO_# AND FULL_CONTRACT.SHIP_TO_# = ORDER_HEADERS.SHIP_TO_# AND (ORDER_HEADERS.GHX_810_DATE IS NULL)
-  AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'FETCH FIRST ROW ONLY""")
+  AND ORDER_HEADERS.ORDER_STATUS <> 'CANCEL'""")
 pd_order = pd.DataFrame(order_details_table, columns=order_details_columns)
 for i, row in enumerate(pd_order.iterrows()):
     dict_table = pd_order.to_dict(orient="index")
-    created_user_var = pd_order.loc[0, "CREATED_USER"] #CREATED_USER_VAR
-    ghx_orderid_var = pd_order.loc[0, "GHX_ORDERID"] #GHX_ORDERID_VAR
-    order_status_var = pd_order.loc[0, "ORDER_STATUS"] #ORDER_STATUS_VAR
-    shipping_status_var = pd_order.loc[0, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
-    orderid_var = pd_order.loc[0, "ORDER_ID"] #ORDERID_VAR
-    order_total_var = pd_order.loc[0, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
-    ship_to_address_1_var = pd_order.loc[0, "SHIP_TO_ADDRESS_1"].iloc[0] #SHIP_TO_ADDRESS_1_VAR
-    ship_to_address_2_var = pd_order.loc[0, "SHIP_TO_ADDRESS_2"].iloc[0] #SHIP_TO_ADDRESS_2_VAR
-    shipped_date_var = pd_order.loc[0, "SHIPPED_DATE"] #SHIPPED_DATE_VAR
-    ship_to_num_var = pd_order.loc[0, "SHIP_TO_#"].iloc[0] #SHIP_TO_#_VAR
-    cus_po_var = pd_order.loc[0, "CUS_PO"] #CUS_PO_VAR
-    ship_to_name = pd_order.loc[0, 'SHIP_TO_NAME'].iloc[0]
-    order_value = pd_order.loc[0, 'ORDER_ID']
-    bill_overdue = pd_order.loc[0, 'BILL_OVER_DUE'] if type(pd_order.loc[0, 'BILL_OVER_DUE']) == str else pd_order.loc[0, 'BILL_OVER_DUE'].iloc[0] #BILL_OVER_DUE_VAR
-    shipping_type_var = pd_order.loc[0, 'SHIPPING_TYPE'] #SHIPPING_TYPE_VAR
-    shipping_carrier_var = pd_order.loc[0, 'SHIPPING_CARRIER'] #SHIPPING_CARRIER_VAR
-    split_order_id_var = pd_order.loc[0, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
-    bill_to_city_var = pd_order.loc[0, 'BILL_TO_CITY'].iloc[0] #BILL_TO_CITY_VAR
-    bill_to_st_var = pd_order.loc[0, 'BILL_TO_ST'].iloc[0] #BILL_TO_STATE_VAR
-    bill_to_zip_var = pd_order.loc[0, 'BILL_TO_ZIP'].iloc[0] #BILL_TO_ZIP_VAR
-    ship_to_city_var = pd_order.loc[0, 'SHIP_TO_CITY'].iloc[0] #SHIP_TO_CITY_VAR
-    ship_to_st_var = pd_order.loc[0, 'SHIP_TO_ST'].iloc[0] #SHIP_TO_STATE_VAR
-    ship_to_zip_var = pd_order.loc[0, 'SHIP_TO_ZIP'].iloc[0] #SHIP_TO_ZIP_VAR
-    bill_to_name_var = pd_order.loc[0, 'BILL_TO_NAME'].iloc[0] #BILL_TO_NAME_VAR
-    bill_to_num_var = pd_order.loc[0, 'BILL_TO_#'].iloc[0] #BILL_TO_NUM_VAR
-    ship_total_var = pd_order.loc[0, 'SHIP_TOTAL'] #SHIP_TOTAL_VAR
-    mini_order_surcharge_var = pd_order.loc[0, 'MINI_ORDER_SURCHAGE'] #MINI_ORDER_SURCHARGE_VAR
-    saturday_surcharge_var = pd_order.loc[0, 'SATURDAY_SURCHAGE'] #SATURDAY_SURCHARGE_VAR
-    drop_ship_surcharge_var = pd_order.loc[0, 'DROP_SHIP_SURCHARGE'] #DROPSHIP_SURCHARGE_VAR
-    sales_tax_var = pd_order.loc[0, 'SALES_TAX'] #SALES_TAX_VAR
-    terms_var = pd_order.loc[0, 'TERMS'] #TERMS_VAR
+    created_user_var = pd_order.loc[i, "CREATED_USER"] #CREATED_USER_VAR
+    ghx_orderid_var = pd_order.loc[i, "GHX_ORDERID"] #GHX_ORDERID_VAR
+    order_status_var = pd_order.loc[i, "ORDER_STATUS"] #ORDER_STATUS_VAR
+    shipping_status_var = pd_order.loc[i, "SHIPPING_STATUS"] #SHIPPING_STATUS_VAR
+    orderid_var = pd_order.loc[i, "ORDER_ID"] #ORDERID_VAR
+    print(f"order id var... : {orderid_var}")
+    order_total_var = pd_order.loc[i, "ORDER_TOTAL"] #ORDER_TOTAL_VAR
+    ship_to_address_1_var = pd_order.loc[i, "SHIP_TO_ADDRESS_1"].iloc[0] #SHIP_TO_ADDRESS_1_VAR
+    ship_to_address_2_var = pd_order.loc[i, "SHIP_TO_ADDRESS_2"].iloc[0] #SHIP_TO_ADDRESS_2_VAR
+    shipped_date_var = pd_order.loc[i, "SHIPPED_DATE"] #SHIPPED_DATE_VAR
+    ship_to_num_var = pd_order.loc[i, "SHIP_TO_#"].iloc[0] #SHIP_TO_#_VAR
+    cus_po_var = pd_order.loc[i, "CUS_PO"] #CUS_PO_VAR
+    ship_to_name = pd_order.loc[i, 'SHIP_TO_NAME'].iloc[0]
+    order_value = pd_order.loc[i, 'ORDER_ID']
+    bill_overdue = pd_order.loc[i, 'BILL_OVER_DUE'] if type(pd_order.loc[0, 'BILL_OVER_DUE']) == str else pd_order.loc[0, 'BILL_OVER_DUE'].iloc[0] #BILL_OVER_DUE_VAR
+    shipping_type_var = pd_order.loc[i, 'SHIPPING_TYPE'] #SHIPPING_TYPE_VAR
+    shipping_carrier_var = pd_order.loc[i, 'SHIPPING_CARRIER'] #SHIPPING_CARRIER_VAR
+    split_order_id_var = pd_order.loc[i, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
+    bill_to_city_var = pd_order.loc[i, 'BILL_TO_CITY'].iloc[0] #BILL_TO_CITY_VAR
+    bill_to_st_var = pd_order.loc[i, 'BILL_TO_ST'].iloc[0] #BILL_TO_STATE_VAR
+    bill_to_zip_var = pd_order.loc[i, 'BILL_TO_ZIP'].iloc[0] #BILL_TO_ZIP_VAR
+    ship_to_city_var = pd_order.loc[i, 'SHIP_TO_CITY'].iloc[0] #SHIP_TO_CITY_VAR
+    ship_to_st_var = pd_order.loc[i, 'SHIP_TO_ST'].iloc[0] #SHIP_TO_STATE_VAR
+    ship_to_zip_var = pd_order.loc[i, 'SHIP_TO_ZIP'].iloc[0] #SHIP_TO_ZIP_VAR
+    bill_to_name_var = pd_order.loc[i, 'BILL_TO_NAME'].iloc[0] #BILL_TO_NAME_VAR
+    bill_to_num_var = pd_order.loc[i, 'BILL_TO_#'].iloc[0] #BILL_TO_NUM_VAR
+    ship_total_var = pd_order.loc[i, 'SHIP_TOTAL'] #SHIP_TOTAL_VAR
+    mini_order_surcharge_var = pd_order.loc[i, 'MINI_ORDER_SURCHAGE'] #MINI_ORDER_SURCHARGE_VAR
+    saturday_surcharge_var = pd_order.loc[i, 'SATURDAY_SURCHAGE'] #SATURDAY_SURCHARGE_VAR
+    drop_ship_surcharge_var = pd_order.loc[i, 'DROP_SHIP_SURCHARGE'] #DROPSHIP_SURCHARGE_VAR
+    sales_tax_var = pd_order.loc[i, 'SALES_TAX'] #SALES_TAX_VAR
+    terms_var = pd_order.loc[i, 'TERMS'] #TERMS_VAR
 
-    split_order_id_var = pd_order.loc[0, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
+    split_order_id_var = pd_order.loc[i, 'SPLIT_ORDER_ID'] #SPLIT_ORDER_ID_VAR
 
     ghx_header_columns, ghx_header_table = retrieve(f"SELECT * FROM GHX_HEADERS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'")
     pd_ghx = pd.DataFrame(ghx_header_table, columns=ghx_header_columns)
@@ -151,22 +154,24 @@ for i, row in enumerate(pd_order.iterrows()):
     segments.append(["BSN", "00", orderid_var, str(curr_date.strftime('%Y%m%d'))] + ([str(curr_date.strftime('%H%M')), "0004"] if (vn_value_var == "71341601") else [str(curr_date.strftime('%H%M'))]) )
     segments.append(["HL", "1", "", "S"])
     segments.append(["TD1", "", (count_package_var if count_package_var != None else 1), "", "", "", "", (total_weight_package_var if total_weight_package_var != None else 10), "LB"]) if vn_value_var == "71341601" else None
-    if vn_value_var == "71341601":
-        segments.append(["TD5", "", 2, fisher_scac_var])
-    else:
-        curr_segment = ["TD5", "B", "2"] + ([fisher_scac_var] if vn_value_var == "VN00106821" else [scac_var])
-        if shipping_carrier_var == "OTH" and shipping_type_var == "FREIGHT":
-            curr_segment += ["M"]
-        elif shipping_carrier_var == "UPS" or shipping_carrier_var == "FEDEX":
-            curr_segment += ["U"]
-        segments.append(curr_segment + [shipping_carrier_var])
+    if shipping_carrier_var not in ["OPTI", "ECHO", "PUP"]:
+        if vn_value_var == "71341601":
+            segments.append(["TD5", "", 2, fisher_scac_var])
+        else:
+            curr_segment = ["TD5", "B", "2"] + ([fisher_scac_var] if vn_value_var == "VN00106821" else [scac_var])
+            if shipping_carrier_var == "OTH" and shipping_type_var == "FREIGHT":
+                curr_segment += ["M"]
+            elif shipping_carrier_var == "UPS" or shipping_carrier_var == "FEDEX":
+                curr_segment += ["U"]
+            segments.append(curr_segment + [shipping_carrier_var])
     if vn_value_var == "71341601":
         segments.append(["REF", "CN", ref_qc_var])
         for row in pd_detail.iterrows():
             segments.append(["REF", "BM", track_no_var[:30]])
     else:
-        for row in pd_detail.iterrows():
-            segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "21"), track_no_var[:30]])
+        for row in pd_track.iterrows():
+            if track_no_var != None:
+                segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "2I"), track_no_var[:30]])
     segments.append(["DTM", "011", str(curr_date.strftime('%Y%m%d'))])
     if vn_value_var == None or vn_value_var != "71341601":
         segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var])
@@ -182,7 +187,7 @@ for i, row in enumerate(pd_order.iterrows()):
     if vn_value_var != None and vn_value_var != "71341601":
         segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
         segments.append(["N3", address_1_var])
-        segments.appendd(["N4", city_var, state_var, zip_var])
+        segments.append(["N4", city_var, state_var, zip_var])
     segments.append(["HL", "2", "1", "O"])
     segments.append(["PRF", cus_po_var])
     if ghx_orderid_var != None:
@@ -191,7 +196,6 @@ for i, row in enumerate(pd_order.iterrows()):
             segments.append(["REF", "PO", ref_po_var])
 
     for row in pd_detail.iterrows():
-        print("MY ROW")
         curr_segment = []
         if order_details_line_sum_qty_var > 0:
             line_counter += 1
@@ -224,11 +228,12 @@ for i, row in enumerate(pd_order.iterrows()):
             edi_text += str(field) + "^"
         edi_text = edi_text[:-1]
         edi_text += "~"
+
+    with open(f"./856_Test_Files/{orderid_var}.txt", "w") as f:
+        f.write(edi_text)
     print(edi_text)
     print("next")
+    print("CARRIER")
+    print(shipping_carrier_var)
 print("done")
 
-# print("OK")
-# print(ship_to_city_var)
-# print(ship_to_st_var)
-# print(ship_to_zip_var)
