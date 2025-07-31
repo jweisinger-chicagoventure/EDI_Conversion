@@ -4,7 +4,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-os.makedirs("./856_Test_Files", exist_ok=True)
+version = input("Please type the type of conversion (TOPS, GHX, FAX)")
+if version != "GHX" and version != "FAX":
+    version = "TOPS" #default version
+os.makedirs(f"./856_Test_Files/{version}", exist_ok=True)
 #Retrieving password from secure file
 password_txt = ''
 with open('password.txt', 'r') as f:
@@ -114,13 +117,21 @@ for i, row in enumerate(pd_order.iterrows()):
     pd_track = pd.DataFrame(track_table, columns=track_columns)
     track_no_var = pd_track.loc[0, "TRACK_NO"] #TRACK_NO_VAR
 
-    order_detail_columns, order_detail_table = retrieve(f"SELECT MAX(PRODUCT_ID) as PRODUCT_ID, MAX(CASE_PRICE) as CASE_PRICE, SUM(QTY) as QTY, MAX(REPLACE(PRODUCT_DESC,'|','-')) as PRODUCT_DESC, SUM(QTY) as QTY,  MAX(BACKORDER_LINE_FLAG) as BACKORDER_LINE  FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'")
-    pd_order_detail= pd.DataFrame(order_detail_table, columns=order_detail_columns)
+    if version == "TOPS" or version == "GHX":
+        order_detail_columns, order_detail_table = retrieve(f"SELECT MAX(PRODUCT_ID) as PRODUCT_ID, MAX(CASE_PRICE) as CASE_PRICE, SUM(QTY) as QTY, MAX(REPLACE(PRODUCT_DESC,'|','-')) as PRODUCT_DESC, SUM(QTY) as QTY,  MAX(BACKORDER_LINE_FLAG) as BACKORDER_LINE  FROM ORDER_DETAILS WHERE ORDER_ID = '{orderid_var}'")
+        pd_order_detail = pd.DataFrame(order_detail_table, columns=order_detail_columns)
+    elif version == "FAX":
+        order_detail_columns, order_detail_table = retrieve(f"SELECT NVL(GHX_LINEID, LINE_ID) as LINE_ID, ORDER_DETAILS.PRODUCT_ID as PRODUCT_ID, REPLACE(ORDER_DETAILS.PRODUCT_DESC,'|','-') as PRODUCT_DESC, UOM, CASE_PRICE, QTY, BACKORDER_LINE_FLAG FROM ORDER_DETAILS, PRODUCTS WHERE ORDER_ID = '{orderid_var}' AND ORDER_DETAILS.PRODUCT_ID = PRODUCTS.PRODUCT_ID")
+        pd_order_detail= pd.DataFrame(order_detail_table, columns=order_detail_columns)
+        order_details_uom_var = pd_order_detail.loc[0, "UOM"] if not pd_order_detail.empty else '' #GHX_UOM_VAR
+        order_details_qty_var = pd_order_detail.loc[0, "QTY"] if not pd_order_detail.empty else '' #QTY_VAR
+        order_details_line_id_var = pd_order_detail.loc[0, 'LINE_ID'] #LINE_ID_VAR
+        order_details_backorder_line = pd_order_detail.loc[0, "BACKORDER_LINE_FLAG"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_BACKORDER_LINE
+
     order_details_case_price_var = pd_order_detail.loc[0, "CASE_PRICE"] if not pd_order_detail.empty else '' #ORDER_DETAILS_CASE_PRICE_VAR
-    order_details_line_sum_qty_var = pd_order_detail.loc[0, "QTY"].iloc[0] if not pd_order_detail.empty else ''  #ORDER_DETAILS_LINE_SUM_QTY_VAR
+    order_details_line_sum_qty_var = pd_order_detail.loc[0, "QTY"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_LINE_SUM_QTY_VAR
     order_details_product_id_var = pd_order_detail.loc[0, "PRODUCT_ID"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_ID_VAR
     order_details_product_desc_var = pd_order_detail.loc[0, "PRODUCT_DESC"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
-    order_details_backorder_line = pd_order_detail.loc[0, "BACKORDER_LINE"] if not pd_order_detail.empty else ''  #ORDER_DETAILS_PRODUCT_DESC_VAR
     order_detail_count = retrieve(f"SELECT COUNT(*) FROM ORDER_DETAILS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND GHX_LINEID = '{ghx_line_id_var}'")[1][0][0]
     order_detail_count2 = retrieve(f"SELECT COUNT(*) FROM PRODUCTS WHERE PRODUCT_ID = '{mapped_vendor_var}' AND VALID_FOR_SALE = '1'")[1][0][0]
     count_var  = retrieve(f"SELECT COUNT(*) FROM GHX_HEADERS WHERE GHX_ORDERID = '{ghx_orderid_var}' AND SHIP_TO_# = '{ship_to_num_var}'") #COUNT_VAR
@@ -140,7 +151,6 @@ for i, row in enumerate(pd_order.iterrows()):
     segment_counter = 2
     segments = []
 
-
     ghx_status_code =  "IR" #GHX_STATUS_CODE
     veyer_ack08_msg = "IB Backorder" #VEYER_ACK08_MSG
     curr_date = datetime.now()
@@ -149,72 +159,93 @@ for i, row in enumerate(pd_order.iterrows()):
     str(curr_date.strftime('%y%m%d')), str(curr_date.strftime('%H%M')), "U", "00401", (inter_con_num[:9] if len(str(inter_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(inter_con_num)))]) + str(inter_con_num)), "0", "P", "|"])
     segments.append(["GS", "SH", "600850213", created_user_var, str(curr_date.strftime('%Y%m%d')), str(curr_date.strftime('%H%M')), (str(group_con_num)[:9] if len(str(group_con_num))>= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num)), "X", "004010"])
     segments.append(["ST", "856", (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])    
-    segments.append(["BSN", "00", orderid_var, str(curr_date.strftime('%Y%m%d'))] + ([str(curr_date.strftime('%H%M')), "0004"] if (vn_value_var == "71341601") else [str(curr_date.strftime('%H%M'))]) )
+    segments.append(["BSN", "00", orderid_var, str(curr_date.strftime('%Y%m%d'))] + ([str(curr_date.strftime('%H%M')), "0004"] if (vn_value_var == "71341601" or version == "TOPS") else [str(curr_date.strftime('%H%M'))]))
     segments.append(["HL", "1", "", "S"])
-    segments.append(["TD1", "", (count_package_var if count_package_var != None else 1), "", "", "", "", (total_weight_package_var if total_weight_package_var != None else 10), "LB"]) if vn_value_var == "71341601" else None
-    if shipping_carrier_var not in ["OPTI", "ECHO", "PUP"]:
-        if vn_value_var == "71341601":
-            segments.append(["TD5", "", 2, fisher_scac_var])
-        else:
-            curr_segment = ["TD5", "B", "2"] + ([fisher_scac_var] if vn_value_var == "VN00106821" else [scac_var])
-            if shipping_carrier_var == "OTH" and shipping_type_var == "FREIGHT":
-                curr_segment += ["M"]
-            elif shipping_carrier_var == "UPS" or shipping_carrier_var == "FEDEX":
-                curr_segment += ["U"]
-            segments.append(curr_segment + [shipping_carrier_var])
-    if vn_value_var == "71341601":
-        segments.append(["REF", "CN", ref_qc_var])
-        for row in pd_detail.iterrows():
-            segments.append(["REF", "BM", track_no_var[:30]])
-    else:
-        for row in pd_track.iterrows():
-            if track_no_var != None:
-                segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "2I"), track_no_var[:30]])
-    segments.append(["DTM", "011", str(curr_date.strftime('%Y%m%d'))])
-    if vn_value_var == None or vn_value_var != "71341601":
-        segments.append(["N1", "ST", ship_to_name, "91", (ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var)])
-        segments.append(["N3", ship_to_address_1_var]) 
-        segments.append(["N3", ship_to_address_2_var]) if ship_to_address_2_var != None else None 
-        segments.append(["N4", ship_to_city_var, ship_to_st_var, ship_to_zip_var])
-    elif vn_value_var == "71341601":
-        segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var])
-    if vn_value_var != None:
-        segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
-        segments.append(["N3", address_1_var])
-        segments.append(["N4", city_var, state_var, zip_var])
-    if vn_value_var != None and vn_value_var != "71341601":
-        segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
-        segments.append(["N3", address_1_var])
-        segments.append(["N4", city_var, state_var, zip_var])
-    segments.append(["HL", "2", "1", "O"])
-    segments.append(["PRF", cus_po_var])
-    if ghx_orderid_var != None:
-        segments.append(["REF", "OQ", ghx_orderid_var])
-        if ref_po_var != None:
-            segments.append(["REF", "PO", ref_po_var])
-
-    for row in pd_detail.iterrows():
-        curr_segment = []
-        if order_details_line_sum_qty_var > 0:
-            line_counter += 1
-            segments.append(["HL", 2+line_counter, "2", "I"])
-            curr_segment += ["LIN", ghx_line_id_var]
-        if vn_value_var == "71341601":
-            curr_segment += ["VA", vendor_id_var]
-        if buyer_id_var != None:
+    if version == "TOPS":
+        segments.append(["TD1", "", (count_package_var if count_package_var != None else 1), "", "", "", "", (total_weight_package_var if total_weight_package_var != None else 10), "LB"]) if vn_value_var == "71341601" else None
+        if shipping_carrier_var not in ["OPTI", "ECHO", "PUP"]:
             if vn_value_var == "71341601":
-                segments.append(curr_segment + [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]) 
-                curr_segment = []
+                segments.append(["TD5", "", 2, fisher_scac_var])
             else:
-                curr_segment += [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]
+                curr_segment = ["TD5", "B", "2"] + ([fisher_scac_var] if vn_value_var == "VN00106821" else [scac_var])
+                if shipping_carrier_var == "OTH" and shipping_type_var == "FREIGHT":
+                    curr_segment += ["M"]
+                elif shipping_carrier_var == "UPS" or shipping_carrier_var == "FEDEX":
+                    curr_segment += ["U"]
+                segments.append(curr_segment + [shipping_carrier_var])
+        if vn_value_var == "71341601":
+            segments.append(["REF", "CN", ref_qc_var])
+            for row in pd_detail.iterrows():
+                segments.append(["REF", "BM", track_no_var[:30] if (track_no_var != None and len(track_no_var) >= 30) else "NA"])
+        else:
+            for row in pd_track.iterrows():
+                if track_no_var != None:
+                    segments.append(["REF", ("CN" if vn_value_var == "VN00106821" else "2I"), track_no_var[:30] if (track_no_var != None and len(track_no_var) >= 30) else "NA"])
+        segments.append(["DTM", "011", str(curr_date.strftime('%Y%m%d'))])
+    elif version == "FAX":
+        segments.append(["TD5", "", 2, scac_var])
+        segments.append(["DTM", "011", str(shipped_date_var.strftime('%Y%m%d'))])
+    if version == "TOPS":
         if vn_value_var == None or vn_value_var != "71341601":
-            segments.append(curr_segment + ["VC", order_details_product_id_var])
+            segments.append(["N1", "ST", ship_to_name, "91", (ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var)])
+            segments.append(["N3", ship_to_address_1_var]) 
+            segments.append(["N3", ship_to_address_2_var]) if ship_to_address_2_var != None else None 
+            segments.append(["N4", ship_to_city_var, ship_to_st_var, ship_to_zip_var])
+        elif vn_value_var == "71341601":
+            segments.append(["N1", "ST", ship_to_name, "91", ghx_ship_to_num_var])
+        if vn_value_var != None:
+            segments.append(["N1", "SF", company_name_var, "92", vn_value_var])
+            segments.append(["N3", address_1_var if address_1_var else ""])
+            segments.append(["N4", city_var, state_var, zip_var])
+        if vn_value_var != None and vn_value_var != "71341601":
+            segments.append(["N1", "VN", company_name_var, "92", vn_value_var])
+            segments.append(["N3", address_1_var if address_1_var else ""])
+            segments.append(["N4", city_var, state_var, zip_var])
+        segments.append(["HL", "2", "1", "O"])
+        segments.append(["PRF", cus_po_var])
+        if ghx_orderid_var != None:
+            segments.append(["REF", "OQ", ghx_orderid_var])
+            if ref_po_var != None:
+                segments.append(["REF", "PO", ref_po_var])
+        for row in pd_detail.iterrows():
             curr_segment = []
-        curr_segment += ["SN1", "", order_details_line_sum_qty_var]
-        segments.append(curr_segment + [(ghx_uom_var if ghx_uom_var != None else (typenex_uom_var if typenex_uom_var else "CA"))] )
-        if vn_value_var == "VN00106821":
-            segments.append(["SLN", ghx_line_id_var, "", "I", "", "", "", "", "", "LT", (lot_var if lot_var != None else 'UNKNOWN')])  
-            segments.append(["DTM", "036", "20501230"])
+            if order_details_line_sum_qty_var > 0:
+                line_counter += 1
+                segments.append(["HL", 2+line_counter, "2", "I"])
+                curr_segment += ["LIN", ghx_line_id_var]
+            if vn_value_var == "71341601":
+                curr_segment += ["VA", vendor_id_var]
+            if buyer_id_var != None:
+                if vn_value_var == "71341601":
+                    segments.append(curr_segment + [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]) 
+                    curr_segment = []
+                else:
+                    curr_segment += [(buyer_id_identifier_var if buyer_id_identifier_var else "IN"), buyer_id_var]
+            if vn_value_var == None or vn_value_var != "71341601":
+                segments.append(curr_segment + ["VC", order_details_product_id_var])
+                curr_segment = []
+            curr_segment += ["SN1", "", order_details_line_sum_qty_var]
+            segments.append(curr_segment + [(ghx_uom_var if ghx_uom_var != None else (typenex_uom_var if typenex_uom_var else "CA"))] )
+            if vn_value_var == "VN00106821":
+                segments.append(["SLN", ghx_line_id_var, "", "I", "", "", "", "", "", "LT", (lot_var if lot_var != None else 'UNKNOWN')])  
+                segments.append(["DTM", "036", "20501230"])
+    elif version == "FAX":
+        segments.append(["N1", "ST", "", "91", (ghx_ship_to_num_var if ghx_ship_to_num_var else ship_to_num_var)])
+        segments.append(["N1", "BT", "", "91", bill_to_num_var])
+        segments.append(["N1", "SF", company_name_var, "91", "WAREHOUSE"])
+        segments.append(["N2", "TYPENEX MEDICAL WAREHOUSE"])
+        segments.append(["N3", (address_1_var if address_1_var else "" + "" + address_2_var if address_2_var else "").rstrip()])
+        segments.append(["N4", city_var, state_var, zip_var])
+        segments.append(["HL", "2", "1", "O"])
+        segments.append(["PRF", cus_po_var])
+        segments.append(["REF", "OQ", ghx_orderid_var])
+        for row in pd_track.iterrows():
+            segments.append(["REF", "CN" if vn_value_var == "VN00106821" else "2I", track_no_var[:30] if (track_no_var != None and len(track_no_var) >= 30) else "NA"])
+        for row in pd_detail.iterrows():
+            segments.append(["HL", 2+line_counter, "2", "I"])
+            segments.append(["LIN", order_details_line_id_var] + (["IN", buyer_id_var] if (buyer_id_var != None) else []))
+            segments.append(["SN1", "", order_details_qty_var, order_details_uom_var])
+
     segments.append(["CTT", 2+line_counter])
     segments.append(["SE", len(segments)-1, (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])
     segments.append(["GE", "1", (str(group_con_num)[:9] if len(str(group_con_num)) >= 9 else ("").join(['0' for i in range(9-len(str(group_con_num)))])  + str(group_con_num))])
@@ -227,5 +258,5 @@ for i, row in enumerate(pd_order.iterrows()):
         edi_text = edi_text[:-1]
         edi_text += "~"
 
-    with open(f"./856_Test_Files/{orderid_var}.txt", "w") as f:
+    with open(f"./856_Test_Files/{version}/{orderid_var}.txt", "w") as f:
         f.write(edi_text)
